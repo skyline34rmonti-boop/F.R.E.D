@@ -1,0 +1,35 @@
+# Deployment template: validate paths, permissions and restart behavior on target Linux host.
+[Unit]
+Description=FRED personal assistant API
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=fred
+Group=fred
+WorkingDirectory=/opt/fred/backend
+EnvironmentFile=/etc/fred/fred.env
+Environment=DATABASE_URL=sqlite:////var/lib/fred/fred.db
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/fred/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log --timeout-graceful-shutdown 20
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+StateDirectory=fred
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/fred
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
